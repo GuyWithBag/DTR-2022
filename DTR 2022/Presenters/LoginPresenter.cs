@@ -1,4 +1,5 @@
-﻿using DTR_2022.Repositories;
+﻿using DTR_2022.Models;
+using DTR_2022.Repositories;
 using DTR_2022.Views;
 using System.Data;
 
@@ -55,18 +56,47 @@ namespace DTR_2022.Presenters
 
             if (_userRepository.IsValidUser(username, password))
             {
+                // Log the login event
+                _userRepository.LogLogin(username);
+                _view.SetUsername(username);
+
+                // Fetch user details to update UI
+                User user = _userRepository.GetUserByUsername(username);
+                if (user != null)
+                {
+                    // Update welcome label
+                    _view.UpdateWelcomeLabel(user.Name ?? username);
+
+                    // Update profile image
+                    if (!string.IsNullOrWhiteSpace(user.Photo) && File.Exists(user.Photo))
+                    {
+                        try
+                        {
+                            using (Image image = Image.FromFile(user.Photo))
+                            {
+                                _view.UpdateProfileImage(new Bitmap(image)); // Create a new copy to avoid file locking
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _view.ShowMessage($"Error loading profile image: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                    }
+                }
+
+                // Refresh logs to show the login event
+                LoadLogs();
+
+                // Check user role for redirection
                 string role = _userRepository.getUserRole(username);
                 if (role == "HR")
                 {
-                    _userRepository.LogLogin(username);
-                    _view.SetUsername(username);
                     _view.ShowMessage("Login successful! Loading registration form...", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     // Open RegistrationForm
                     RegistrationForm registrationForm = new RegistrationForm();
                     registrationForm.FormClosed += (s, args) =>
                     {
-                        LogLogout(username); // Log logout when RegistrationForm closes
                         _view.ShowForm(); // Show LoginForm again
                         _view.RefreshLogs(); // Refresh logs
                     };
@@ -75,8 +105,6 @@ namespace DTR_2022.Presenters
                 }
                 else
                 {
-                    _userRepository.LogLogin(username);
-                    _view.SetUsername(username);
                     _view.ShowMessage("Login successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }

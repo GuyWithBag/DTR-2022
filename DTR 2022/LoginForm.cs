@@ -89,5 +89,30 @@ namespace DTR_2022
         {
             _presenter.LoadLogs();
         }
+
+        public void UpdateWelcomeLabel(string name)
+        {
+            if (labelWelcome.InvokeRequired)
+            {
+                labelWelcome.Invoke(new Action<string>(UpdateWelcomeLabel), name);
+            }
+            else
+            {
+                labelWelcome.Text = $"Good morning {name}!";
+            }
+        }
+
+        public void UpdateProfileImage(Image image)
+        {
+            if (pictureBoxProfileImage.InvokeRequired)
+            {
+                pictureBoxProfileImage.Invoke(new Action<Image>(UpdateProfileImage), image);
+            }
+            else
+            {
+                pictureBoxProfileImage.Image = image;
+                pictureBoxProfileImage.SizeMode = PictureBoxSizeMode.StretchImage;
+            }
+        }
     }
 }

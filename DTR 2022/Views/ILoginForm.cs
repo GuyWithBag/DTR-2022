@@ -12,5 +12,7 @@ namespace DTR_2022.Views
         void SetUsername(string username);
         void ShowForm();
         void RefreshLogs();
+        void UpdateWelcomeLabel(string name);
+        void UpdateProfileImage(Image image);
     }
 }

@@ -38,6 +38,30 @@ namespace DTR_2022.Repositories
             }
         }
 
+        public User GetUserByUsername(string username)
+        {
+            using (MySqlConnection conn = new MySqlConnection(_connectionString))
+            {
+                conn.Open();
+                string query = "SELECT name, photo FROM Users WHERE username = @username";
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@username", username);
+
+                using (MySqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        return new User
+                        {
+                            Name = reader["name"]?.ToString(),
+                            Photo = reader["photo"]?.ToString()
+                        };
+                    }
+                }
+                return null; // Return null if user not found
+            }
+        }
+
         public string RegisterUser(User user)
         {
             try
@@ -65,7 +89,7 @@ namespace DTR_2022.Repositories
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
-                        char sex = user.Sex?.Length > 0 ? user.Sex[0] : ' ';
+                        char sex = user.Sex?.Length > 0 ? user.Sex[0] : 'M';
                         cmd.Parameters.AddWithValue("@username", username);
                         cmd.Parameters.AddWithValue("@name", user.Name ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@password", user.Password ?? (object)DBNull.Value);
@@ -76,7 +100,7 @@ namespace DTR_2022.Repositories
                         cmd.Parameters.AddWithValue("@contact_info", user.ContactInfo ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@position", user.Position ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@hourly_rate", user.HourlyRate == 0 ? (object)DBNull.Value : user.HourlyRate);
-                        cmd.Parameters.AddWithValue("@photo", user.Photo ?? (object)DBNull.Value); // Store path directly
+                        cmd.Parameters.AddWithValue("@photo", user.Photo ?? (object)DBNull.Value);
 
                         int result = cmd.ExecuteNonQuery();
 
